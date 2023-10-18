@@ -8,8 +8,8 @@ RUN apt-get update ;\
     apt-get install -y --install-recommends \
     vim wget curl git grep sed gdb zsh cmake ninja-build \
     clang-tools-15 clang-tidy-15 clangd-15 llvm-15 \
-    clang-14 \
-    clang-format-11 \
+    clang-13 clang-14 clang-15 \
+    clang-format-11 clang-format-12 clang-format-13 clang-format-14 clang-format-15 \
     python3 python3-pip python3-venv ;\
     apt-get clean
 
@@ -43,6 +43,10 @@ RUN pip install 'conan<2' ;\
     conan profile update settings.compiler.cppstd=20 default ;\
     conan profile update settings.compiler.libcxx=libstdc++11 default ;\
     conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/lib/llvm-14/bin/clang", "cpp": "/usr/lib/llvm-14/bin/clang++"}' default
+
+ENV CC=/usr/lib/llvm-14/bin/clang
+ENV CXX=/usr/lib/llvm-14/bin/clang++
+ENV WORKSPACE=${WORKSPACE}
 
 RUN echo "mkdir .build" > TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
