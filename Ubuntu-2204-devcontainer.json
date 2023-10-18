@@ -2,10 +2,9 @@
 //  devcontainer.json is mapped to JSONC - hooray for comments !
     "name": "Ubuntu 22.04",
     "build": {
-        "dockerfile": "Ubuntu_22_04_rippled/Dockerfile",
-        "context": "Ubuntu_22_04_rippled",
-//  By default, GID and UID are only visible to shell and not exported.
-//  You need to add `export GID; export UID` somewhere, e.g. ~/.profile
+        "dockerfile": "Dockerfile",
+        //  By default, GID and UID are only visible to shell and not exported.
+        //  You need to add `export GID; export UID` somewhere, e.g. ~/.profile
         "args": {
             "DIST_TAG": "22.04",
             "USER_UID": "${localEnv:UID}",
