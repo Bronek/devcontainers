@@ -1,4 +1,4 @@
-ARG DIST_TAG
+ARG DIST_TAG=22.04
 FROM ubuntu:$DIST_TAG
 
 WORKDIR /root
@@ -6,7 +6,7 @@ WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update ;\
     apt-get install -y --install-recommends \
-    vim wget curl git grep sed gdb zsh cmake ninja-build \
+    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build \
     clang-tools-15 clang-tidy-15 clangd-15 llvm-15 \
     clang-13 clang-14 clang-15 \
     clang-format-11 clang-format-12 clang-format-13 clang-format-14 clang-format-15 \
@@ -21,12 +21,16 @@ RUN wget -O /etc/zsh/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
 ARG USER_NAME
 ARG USER_UID
 ARG USER_GID
-RUN groupadd --gid ${USER_GID} ${USER_NAME} \
+RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(getent group ${USER_GID} | cut -d: -f1)) \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USER_NAME} -s /bin/zsh -d /home/${USER_NAME}
 
 ARG WORKSPACE
 RUN mkdir -p ${WORKSPACE} ;\
     chown ${USER_NAME}:${USER_NAME} ${WORKSPACE}
+
+ENV HOSTALIASES /home/${USER_NAME}/hosts
+RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
+    chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
 
 USER ${USER_NAME}
 ENV HOME=/home/${USER_NAME}
@@ -38,11 +42,16 @@ ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 ENV EDITOR=vim
 ENV VISUAL=vim
 
-RUN pip install 'conan<2' ;\
-    conan profile new default --detect ;\
-    conan profile update settings.compiler.cppstd=20 default ;\
-    conan profile update settings.compiler.libcxx=libstdc++11 default ;\
-    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/lib/llvm-14/bin/clang", "cpp": "/usr/lib/llvm-14/bin/clang++"}' default
+RUN pip --no-cache-dir install 'conan<2'
+
+ENV CONAN_PROFILE=clang-14
+RUN conan profile new ${CONAN_PROFILE} --detect ;\
+    conan profile update settings.compiler=clang ${CONAN_PROFILE} ;\
+    conan profile update settings.compiler.version=14 ${CONAN_PROFILE} ;\
+    conan profile update settings.compiler.cppstd=20 ${CONAN_PROFILE} ;\
+    conan profile update settings.compiler.libcxx=libstdc++11 ${CONAN_PROFILE} ;\
+    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/lib/llvm-14/bin/clang", "cpp": "/usr/lib/llvm-14/bin/clang++"}' ${CONAN_PROFILE} ;\
+    ln -s ${HOME}/.conan/profiles/${CONAN_PROFILE} ${HOME}/.conan/profiles/default
 
 ENV CC=/usr/lib/llvm-14/bin/clang
 ENV CXX=/usr/lib/llvm-14/bin/clang++
