@@ -44,14 +44,15 @@ ENV VISUAL=vim
 
 RUN pip --no-cache-dir install 'conan<2'
 
-ENV CONAN_PROFILE=clang-15
-RUN conan profile new ${CONAN_PROFILE} --detect ;\
-    conan profile update settings.compiler=clang ${CONAN_PROFILE} ;\
-    conan profile update settings.compiler.version=15 ${CONAN_PROFILE} ;\
-    conan profile update settings.compiler.cppstd=20 ${CONAN_PROFILE} ;\
-    conan profile update settings.compiler.libcxx=libstdc++11 ${CONAN_PROFILE} ;\
-    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/lib/llvm-15/bin/clang", "cpp": "/usr/lib/llvm-15/bin/clang++"}' ${CONAN_PROFILE} ;\
-    ln -s ${HOME}/.conan/profiles/${CONAN_PROFILE} ${HOME}/.conan/profiles/default
+ENV PROFILE=clang-15
+RUN conan profile new ${PROFILE} --detect ;\
+    conan profile update settings.compiler=clang ${PROFILE} ;\
+    conan profile update settings.compiler.version=15 ${PROFILE} ;\
+    conan profile update settings.compiler.cppstd=20 ${PROFILE} ;\
+    conan profile update settings.compiler.libcxx=libstdc++11 ${PROFILE} ;\
+    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/lib/llvm-15/bin/clang", "cpp": "/usr/lib/llvm-15/bin/clang++"}' ${PROFILE} ;\
+    ln -s ${HOME}/.conan/profiles/${PROFILE} ${HOME}/.conan/profiles/default ;\
+    mkdir -p ~/.conan/data
 
 ENV CC=/usr/lib/llvm-15/bin/clang
 ENV CXX=/usr/lib/llvm-15/bin/clang++

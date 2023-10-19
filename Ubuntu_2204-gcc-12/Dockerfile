@@ -49,14 +49,15 @@ ENV VISUAL=vim
 
 RUN pip --no-cache-dir install 'conan<2'
 
-ENV CONAN_PROFILE=gcc-12
-RUN conan profile new ${CONAN_PROFILE} --detect ;\
-    conan profile update settings.compiler=gcc ${CONAN_PROFILE} ;\
-    conan profile update settings.compiler.version=12 ${CONAN_PROFILE} ;\
-    conan profile update settings.compiler.cppstd=20 ${CONAN_PROFILE} ;\
-    conan profile update settings.compiler.libcxx=libstdc++11 ${CONAN_PROFILE} ;\
-    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/gcc-12", "cpp": "/usr/bin/g++-12"}' ${CONAN_PROFILE} ;\
-    ln -s ${HOME}/.conan/profiles/${CONAN_PROFILE} ${HOME}/.conan/profiles/default
+ENV PROFILE=gcc-12
+RUN conan profile new ${PROFILE} --detect ;\
+    conan profile update settings.compiler=gcc ${PROFILE} ;\
+    conan profile update settings.compiler.version=12 ${PROFILE} ;\
+    conan profile update settings.compiler.cppstd=20 ${PROFILE} ;\
+    conan profile update settings.compiler.libcxx=libstdc++11 ${PROFILE} ;\
+    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/gcc-12", "cpp": "/usr/bin/g++-12"}' ${PROFILE} ;\
+    ln -s ${HOME}/.conan/profiles/${PROFILE} ${HOME}/.conan/profiles/default ;\
+    mkdir -p ~/.conan/data
 
 ENV CC=/usr/bin/gcc-12
 ENV CXX=/usr/bin/g++-12

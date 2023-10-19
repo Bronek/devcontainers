@@ -1,12 +1,11 @@
 {
-//  devcontainer.json is mapped to JSONC - hooray for comments !
-    "name": "Ubuntu 22.04",
+    //  devcontainer.json is mapped to JSONC - hooray for comments !
+    "name": "${devcontainerId}",
     "build": {
         "dockerfile": "Dockerfile",
         //  By default, GID and UID are only visible to shell and not exported.
         //  You need to add `export GID; export UID` somewhere, e.g. ~/.profile
         "args": {
-            "DIST_TAG": "22.04",
             "USER_UID": "${localEnv:UID}",
             "USER_GID": "${localEnv:GID}",
             "USER_NAME": "${localEnv:USER}",
@@ -14,25 +13,28 @@
         }
     },
     "containerUser": "${localEnv:USER}",
+    "containerEnv": {
+        "DEVCONTAINER_ID": "${devcontainerId}"
+    },
     "init": true,
     "customizations": {
         "vscode": {
             "extensions": [
-				"llvm-vs-code-extensions.vscode-clangd",
-				"xaver.clang-format",
-				"ms-vscode.cpptools-themes",
-				"eamodio.gitlens",
-				"GitHub.vscode-pull-request-github",
-				"jeff-hykin.better-cpp-syntax",
-				"ajshort.include-autocomplete",
-				"ms-azuretools.vscode-docker",
-				"DavidAnson.vscode-markdownlint",
-				"GitHub.remotehub",
-				"GitHub.github-vscode-theme"
-			]
+                "llvm-vs-code-extensions.vscode-clangd",
+                "xaver.clang-format",
+                "ms-vscode.cpptools-themes",
+                "eamodio.gitlens",
+                "GitHub.vscode-pull-request-github",
+                "jeff-hykin.better-cpp-syntax",
+                "ajshort.include-autocomplete",
+                "ms-azuretools.vscode-docker",
+                "DavidAnson.vscode-markdownlint",
+                "GitHub.remotehub",
+                "GitHub.github-vscode-theme"
+            ]
         }
     },
-//  This allows the `compile_commands.json` to be shared by both host and container
+    //  This allows the `compile_commands.json` to be shared by both host and container
     "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
     "workspaceFolder": "${localWorkspaceFolder}",
     "mounts": [
@@ -42,9 +44,9 @@
             "type": "bind"
         },
         {
-//  This allows sharing of conan data between containers
+            //  This allows sharing of conan data between containers
             "source": "conan_data",
-            "target": "/home/${localEnv:USER}/.conan",
+            "target": "/home/${localEnv:USER}/.conan/data",
             "type": "volume"
         }
     ],
@@ -55,4 +57,3 @@
         "seccomp=unconfined"
     ]
 }
-
