@@ -65,7 +65,8 @@ RUN echo "mkdir .build" > TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
     echo "cmake -DCMAKE_GENERATOR='Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
     echo "cmake --build . --config Release" >> TODO.txt ;\
-    echo "cmake --build . --config Debug" >> TODO.txt
+    echo "cmake --build . --config Debug" >> TODO.txt ;\
+    echo 'for i in $(ls ~/.conan/data/*/*/_/_/package/*/conaninfo.txt); do head $i | grep -A4 -B4 build_type=Release | grep -A4 -B4 os=Linux | grep -A4 -B4 compiler=clang | grep compiler.version=13 >/dev/null && echo $(readlink -f $(dirname $i)/include); done' >> TODO.txt
 
 RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     touch .zshrc.local ;\
