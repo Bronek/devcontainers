@@ -14,7 +14,9 @@
     },
     "containerUser": "${localEnv:USER}",
     "containerEnv": {
-        "DEVCONTAINER_ID": "${devcontainerId}"
+        "DEVCONTAINER_ID": "${devcontainerId}",
+        // Pass ssh-agent sock for git authentication
+        "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh"
     },
     "init": true,
     "customizations": {
@@ -44,12 +46,19 @@
             "type": "bind"
         },
         {
+            // Pass ssh-agent sock for git authentication
+            "source": "${localEnv:SSH_AUTH_SOCK}",
+            "target": "/run/user/${localEnv:UID}/ssh",
+            "type": "bind"
+        },
+        {
             //  This allows sharing of conan data between containers
             "source": "conan_data",
             "target": "/home/${localEnv:USER}/.conan/data",
             "type": "volume"
         }
     ],
+    // For debugging
     "capAdd": [
         "SYS_PTRACE"
     ],
