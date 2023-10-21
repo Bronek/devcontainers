@@ -8,15 +8,15 @@
         "args": {
             "USER_UID": "${localEnv:UID}",
             "USER_GID": "${localEnv:GID}",
-            "USER_NAME": "${localEnv:USER}",
-            "WORKSPACE": "${localWorkspaceFolder}"
+            "USER_NAME": "${localEnv:USER}"
         }
     },
     "containerUser": "${localEnv:USER}",
     "containerEnv": {
         "DEVCONTAINER_ID": "${devcontainerId}",
         // Pass ssh-agent sock for git authentication
-        "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh"
+        "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh",
+        "WORKSPACE": "${localWorkspaceFolder}"
     },
     "init": true,
     "customizations": {
@@ -54,7 +54,7 @@
         {
             //  This allows sharing of conan data between containers
             "source": "conan_data",
-            "target": "/home/${localEnv:USER}/.conan/data",
+            "target": "/home/${localEnv:USER}/.conan",
             "type": "volume"
         }
     ],

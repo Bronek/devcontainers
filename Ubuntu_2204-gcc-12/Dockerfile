@@ -29,10 +29,6 @@ ARG USER_GID
 RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(getent group ${USER_GID} | cut -d: -f1)) \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USER_NAME} -s /bin/zsh -d /home/${USER_NAME}
 
-ARG WORKSPACE
-RUN mkdir -p ${WORKSPACE} ;\
-    chown ${USER_NAME}:${USER_NAME} ${WORKSPACE}
-
 ENV HOSTALIASES /home/${USER_NAME}/hosts
 RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
     chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
@@ -47,7 +43,10 @@ ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 ENV EDITOR=vim
 ENV VISUAL=vim
 
-RUN pip --no-cache-dir install 'conan<2'
+RUN mkdir -p ${HOME}/.conan_profiles ;\
+    mkdir -p ${HOME}/.conan ;\
+    ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
+    pip --no-cache-dir install 'conan<2'
 
 ENV PROFILE=gcc-12
 RUN conan profile new ${PROFILE} --detect ;\
@@ -56,12 +55,11 @@ RUN conan profile new ${PROFILE} --detect ;\
     conan profile update settings.compiler.cppstd=20 ${PROFILE} ;\
     conan profile update settings.compiler.libcxx=libstdc++11 ${PROFILE} ;\
     conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/gcc-12", "cpp": "/usr/bin/g++-12"}' ${PROFILE} ;\
-    ln -s ${HOME}/.conan/profiles/${PROFILE} ${HOME}/.conan/profiles/default ;\
-    mkdir -p ~/.conan/data
+    grep -Fx "tools.cmake.cmaketoolchain:generator=Ninja" ${HOME}/.conan/global.conf &>/dev/null || echo tools.cmake.cmaketoolchain:generator=Ninja >> ${HOME}/.conan/global.conf
 
+ENV CONAN_DEFAULT_PROFILE_PATH=${HOME}/.conan/profiles/${PROFILE}
 ENV CC=/usr/bin/gcc-12
 ENV CXX=/usr/bin/g++-12
-ENV WORKSPACE=${WORKSPACE}
 
 RUN echo "mkdir .build" > TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
