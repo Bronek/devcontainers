@@ -27,6 +27,8 @@ RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(geten
 ENV HOSTALIASES /home/${USER_NAME}/hosts
 RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
     chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
+RUN mkdir -p /run/host-services ;\
+    chown ${USER_NAME}:${USER_NAME} /run/host-services
 
 USER ${USER_NAME}
 ENV HOME=/home/${USER_NAME}

@@ -14,9 +14,9 @@
     "containerUser": "${localEnv:USER}",
     "containerEnv": {
         "DEVCONTAINER_ID": "${devcontainerId}",
-        // Pass ssh-agent sock for git authentication
-        "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh",
-        "WORKSPACE": "${localWorkspaceFolder}"
+        "WORKSPACE": "${localWorkspaceFolder}",
+        // For git authentication, as per https://docs.docker.com/desktop/networking/#ssh-agent-forwarding
+        "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
     },
     "init": true,
     "customizations": {
@@ -46,9 +46,9 @@
             "type": "bind"
         },
         {
-            // Pass ssh-agent sock for git authentication
-            "source": "${localEnv:SSH_AUTH_SOCK}",
-            "target": "/run/user/${localEnv:UID}/ssh",
+            // For git authentication, as per https://docs.docker.com/desktop/networking/#ssh-agent-forwarding
+            "source": "/run/host-services/ssh-auth.sock",
+            "target": "/run/host-services/ssh-auth.sock",
             "type": "bind"
         },
         {
