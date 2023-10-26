@@ -6,7 +6,7 @@ WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update ;\
     apt-get install -y --install-recommends \
-    lsb-release sudo vim wget curl git grep sed gdb zsh cmake ninja-build \
+    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build \
     clang-tools-15 clang-tidy-15 clangd-15 llvm-15 \
     clang-13 clang-14 clang-15 \
     clang-format-11 clang-format-12 clang-format-13 clang-format-14 clang-format-15 \
@@ -27,7 +27,6 @@ RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(geten
 ENV HOSTALIASES /home/${USER_NAME}/hosts
 RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
     chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
-RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER_NAME}
 
 USER ${USER_NAME}
 ENV HOME=/home/${USER_NAME}

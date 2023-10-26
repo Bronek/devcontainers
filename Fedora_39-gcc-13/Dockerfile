@@ -4,8 +4,8 @@ FROM fedora:$DIST_TAG
 WORKDIR /root
 
 RUN dnf -y update ;\
-    dnf -y install \
-    redhat-lsb sudo python3.11 gcc vim wget curl git grep sed gdb zsh cmake ninja-build \
+    dnf -y install redhat-lsb python3.11 gcc \
+    vim wget curl git grep sed gdb zsh cmake ninja-build \
     clang clang-tools-extra llvm ;\
     dnf -y clean all
 
@@ -21,7 +21,6 @@ RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(geten
 ENV HOSTALIASES /home/${USER_NAME}/hosts
 RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
     chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
-RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER_NAME}
 
 USER ${USER_NAME}
 ENV HOME=/home/${USER_NAME}
