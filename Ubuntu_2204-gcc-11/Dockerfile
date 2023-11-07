@@ -52,6 +52,7 @@ RUN mkdir -p ${HOME}/.conan_profiles ;\
 
 ENV PROFILE=gcc-11
 RUN conan profile new ${PROFILE} --detect ;\
+    ln -s ${HOME}/.conan_profiles/${PROFILE} ${HOME}/.conan_profiles/default ;\
     conan profile update settings.compiler=gcc ${PROFILE} ;\
     conan profile update settings.compiler.version=11 ${PROFILE} ;\
     conan profile update settings.compiler.cppstd=20 ${PROFILE} ;\
@@ -59,19 +60,30 @@ RUN conan profile new ${PROFILE} --detect ;\
     conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/gcc-11", "cpp": "/usr/bin/g++-11"}' ${PROFILE} ;\
     grep -Fx "tools.cmake.cmaketoolchain:generator=Ninja" ${HOME}/.conan/global.conf &>/dev/null || echo tools.cmake.cmaketoolchain:generator=Ninja >> ${HOME}/.conan/global.conf
 
-ENV CONAN_DEFAULT_PROFILE_PATH=${HOME}/.conan/profiles/${PROFILE}
 ENV CC=/usr/bin/gcc-11
 ENV CXX=/usr/bin/g++-11
+ENV CONAN_DEFAULT_PROFILE_PATH=${HOME}/.conan/profiles/${PROFILE}
+ENV CMAKE_GENERATOR='Ninja Multi-Config'
+ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
+ENV CMAKE_C_COMPILER=${CC}
+ENV CMAKE_CXX_COMPILER=${CXX}
 
 RUN echo "mkdir .build" > TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
     echo "cd .build" >> TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Debug" >> TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
-    echo "cmake -DCMAKE_GENERATOR='Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
+    echo "cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
     echo "cmake --build . --config Release" >> TODO.txt ;\
     echo "cmake --build . --config Debug" >> TODO.txt ;\
-    echo 'for i in $(ls ~/.conan/data/*/*/_/_/package/*/conaninfo.txt); do head $i | grep -A4 -B4 build_type=Release | grep -A4 -B4 os=Linux | grep -A4 -B4 compiler=gcc | grep compiler.version=11 >/dev/null && echo $(readlink -f $(dirname $i)/include); done' >> TODO.txt
+    echo 'for i in $(ls ~/.conan/data/*/*/_/_/package/*/conaninfo.txt); '\
+    'do head -20 $i | '\
+    'grep -A10 -B10 build_type=Release | '\
+    'grep -A10 -B10 os=Linux | '\
+    'grep -A10 -B10 -E "^compiler=gcc" | '\
+    'grep -E "^compiler.version=11|^compiler.version=5" >/dev/null && '\
+    'echo $(readlink -f $(dirname $i)/include); '\
+    'done' >> TODO.txt
 
 RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     touch .zshrc.local ;\
