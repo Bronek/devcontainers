@@ -6,8 +6,8 @@ WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update ;\
     apt-get install -y --install-recommends \
-    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build \
-    clang-tools-15 clang-tidy-15 clangd-15 llvm-15 \
+    lsb-release sudo vim wget curl git grep sed gdb zsh cmake ninja-build \
+    clang-tools-15 clang-tidy-15 clangd-15 llvm-15 mold \
     clang-13 clang-14 clang-15 \
     clang-format-11 clang-format-12 clang-format-13 clang-format-14 clang-format-15 \
     python3 python3-pip python3-venv ;\
@@ -22,11 +22,14 @@ ARG USER_NAME
 ARG USER_UID
 ARG USER_GID
 RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(getent group ${USER_GID} | cut -d: -f1)) \
-    && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USER_NAME} -s /bin/zsh -d /home/${USER_NAME}
+    && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/zsh -d /home/${USER_NAME} ${USER_NAME} ;\
+    echo "${USER_NAME} ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER_NAME}
 
 ENV HOSTALIASES /home/${USER_NAME}/hosts
-RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
+RUN cp /etc/hosts /home/${USER_NAME}/hosts || touch /home/${USER_NAME}/hosts ;\
     chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
+RUN mkdir -p /run/host-services ;\
+    chown ${USER_NAME}:${USER_NAME} /run/host-services
 
 USER ${USER_NAME}
 ENV HOME=/home/${USER_NAME}

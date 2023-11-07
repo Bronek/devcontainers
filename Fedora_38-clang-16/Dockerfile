@@ -5,8 +5,8 @@ WORKDIR /root
 
 RUN dnf -y update ;\
     dnf -y install redhat-lsb python3.11 gcc \
-    vim wget curl git grep sed gdb zsh cmake ninja-build \
-    clang clang-tools-extra llvm ;\
+    vim wget sudo curl git grep sed gdb zsh cmake ninja-build \
+    clang clang-tools-extra llvm mold;\
     dnf -y clean all
 
 RUN wget -O /etc/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
@@ -16,11 +16,14 @@ ARG USER_NAME
 ARG USER_UID
 ARG USER_GID
 RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(getent group ${USER_GID} | cut -d: -f1)) \
-    && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USER_NAME} -s /bin/zsh -d /home/${USER_NAME}
+    && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/zsh -d /home/${USER_NAME} ${USER_NAME} ;\
+    echo "${USER_NAME} ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER_NAME}
 
 ENV HOSTALIASES /home/${USER_NAME}/hosts
-RUN cp /etc/hosts /home/${USER_NAME}/hosts ;\
+RUN cp /etc/hosts /home/${USER_NAME}/hosts || touch /home/${USER_NAME}/hosts ;\
     chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
+RUN mkdir -p /run/host-services ;\
+    chown ${USER_NAME}:${USER_NAME} /run/host-services
 
 USER ${USER_NAME}
 ENV HOME=/home/${USER_NAME}
