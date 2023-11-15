@@ -6,7 +6,7 @@ WORKDIR /root
 RUN dnf -y update ;\
     dnf -y install redhat-lsb python3.11 gcc \
     vim wget sudo curl git grep sed gdb zsh cmake ninja-build \
-    clang clang-tools-extra llvm mold;\
+    clang clang-tools-extra llvm mold gcc libstdc++-static ;\
     dnf -y clean all
 
 RUN wget -O /etc/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
