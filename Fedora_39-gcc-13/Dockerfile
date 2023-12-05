@@ -38,7 +38,8 @@ ENV VISUAL=vim
 RUN mkdir -p ${HOME}/.conan_profiles ;\
     mkdir -p ${HOME}/.conan ;\
     ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
-    pip --no-cache-dir install 'conan<2'
+    pip --no-cache-dir install 'conan<2' ;\
+    pip --no-cache-dir install 'gcovr'
 
 # Fail build if unexpected gcc version
 RUN gcc --version | grep -E "^gcc \(GCC\) 13"

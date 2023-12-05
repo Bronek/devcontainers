@@ -44,7 +44,8 @@ ENV VISUAL=vim
 RUN mkdir -p ${HOME}/.conan_profiles ;\
     mkdir -p ${HOME}/.conan ;\
     ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
-    pip --no-cache-dir install 'conan<2'
+    pip --no-cache-dir install 'conan<2' ;\
+    pip --no-cache-dir install 'gcovr'
 
 ENV PROFILE=clang-15
 RUN conan profile new ${PROFILE} --detect ;\
@@ -63,6 +64,7 @@ ENV CMAKE_GENERATOR='Ninja Multi-Config'
 ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
 ENV CMAKE_C_COMPILER=${CC}
 ENV CMAKE_CXX_COMPILER=${CXX}
+ENV CODE_COVERAGE_GCOV_TOOL="/usr/lib/llvm-15/bin/llvm-cov gcov"
 
 RUN echo "mkdir .build" > TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\

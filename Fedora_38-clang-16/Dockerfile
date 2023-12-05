@@ -38,7 +38,8 @@ ENV VISUAL=vim
 RUN mkdir -p ${HOME}/.conan_profiles ;\
     mkdir -p ${HOME}/.conan ;\
     ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
-    pip --no-cache-dir install 'conan<2'
+    pip --no-cache-dir install 'conan<2' ;\
+    pip --no-cache-dir install 'gcovr'
 
 # Fail build if unexpected clang version
 RUN clang --version | grep -E "^clang version 16"
