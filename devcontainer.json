@@ -33,7 +33,8 @@
 				"DavidAnson.vscode-markdownlint",
 				"GitHub.remotehub",
 				"GitHub.github-vscode-theme",
-				"ms-python.python"
+				"ms-python.python",
+				"ms-vscode.cmake-tools"
 			]
         }
     },
