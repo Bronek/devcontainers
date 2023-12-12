@@ -22,20 +22,21 @@
     "customizations": {
         "vscode": {
             "extensions": [
-				"llvm-vs-code-extensions.vscode-clangd",
-				"xaver.clang-format",
-				"ms-vscode.cpptools-themes",
-				"eamodio.gitlens",
-				"GitHub.vscode-pull-request-github",
-				"jeff-hykin.better-cpp-syntax",
-				"ajshort.include-autocomplete",
-				"ms-azuretools.vscode-docker",
-				"DavidAnson.vscode-markdownlint",
-				"GitHub.remotehub",
-				"GitHub.github-vscode-theme",
-				"ms-python.python",
-				"ms-vscode.cmake-tools"
-			]
+                "llvm-vs-code-extensions.vscode-clangd",
+                "xaver.clang-format",
+                "ms-vscode.cpptools-themes",
+                "eamodio.gitlens",
+                "GitHub.vscode-pull-request-github",
+                "jeff-hykin.better-cpp-syntax",
+                "ajshort.include-autocomplete",
+                "ms-azuretools.vscode-docker",
+                "DavidAnson.vscode-markdownlint",
+                "GitHub.remotehub",
+                "GitHub.github-vscode-theme",
+                "ms-python.python",
+                "ms-vscode.cmake-tools",
+                "github.vscode-github-actions"
+            ]
         }
     },
     //  This allows the `compile_commands.json` to be shared by both host and container
