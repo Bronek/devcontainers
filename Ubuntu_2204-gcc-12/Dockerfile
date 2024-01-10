@@ -65,7 +65,8 @@ RUN conan profile new ${PROFILE} --detect ;\
 ENV CC=/usr/bin/gcc-12
 ENV CXX=/usr/bin/g++-12
 ENV CONAN_DEFAULT_PROFILE_PATH=${HOME}/.conan/profiles/${PROFILE}
-ENV CMAKE_GENERATOR='Ninja Multi-Config'
+ENV CMAKE_GENERATOR=Ninja
+ENV CMAKE_BUILD_TYPE=Debug
 ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
 ENV CMAKE_C_COMPILER=${CC}
 ENV CMAKE_CXX_COMPILER=${CXX}
@@ -77,14 +78,13 @@ RUN echo "mkdir .build" > TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Debug" >> TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
     echo "cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
-    echo "cmake --build . --config Release" >> TODO.txt ;\
-    echo "cmake --build . --config Debug" >> TODO.txt ;\
+    echo "cmake --build ." >> TODO.txt ;\
     echo 'for i in $(ls ~/.conan/data/*/*/_/_/package/*/conaninfo.txt); '\
     'do head -20 $i | '\
     'grep -A10 -B10 build_type=Release | '\
     'grep -A10 -B10 os=Linux | '\
-    'grep -A10 -B10 -E "^compiler=gcc" | '\
-    'grep -E "^compiler.version=12|^compiler.version=5" >/dev/null && '\
+    'grep -A10 -B10 -E "compiler=gcc" | '\
+    'grep -E "compiler.version=12|compiler.version=5" >/dev/null && '\
     'echo $(readlink -f $(dirname $i)/include); '\
     'done' >> TODO.txt
 

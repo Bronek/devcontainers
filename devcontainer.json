@@ -16,7 +16,7 @@
         "DEVCONTAINER_ID": "${devcontainerId}",
         // Pass ssh-agent sock for git authentication
         "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh",
-        "WORKSPACE": "${localWorkspaceFolder}"
+        "WORK": "${localWorkspaceFolder}"
     },
     "init": true,
     "customizations": {
@@ -30,10 +30,8 @@
                 "jeff-hykin.better-cpp-syntax",
                 "ajshort.include-autocomplete",
                 "ms-azuretools.vscode-docker",
-                "DavidAnson.vscode-markdownlint",
                 "GitHub.remotehub",
                 "GitHub.github-vscode-theme",
-                "ms-python.python",
                 "ms-vscode.cmake-tools",
                 "github.vscode-github-actions"
             ]
