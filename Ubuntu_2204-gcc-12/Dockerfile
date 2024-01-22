@@ -6,38 +6,24 @@ WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update ;\
     apt-get install -y --install-recommends \
-    lsb-release sudo vim wget curl git grep sed gdb zsh cmake ninja-build \
-    clang-tools-15 clang-tidy-15 clangd-15 llvm-15 mold \
-    clang-13 clang-14 clang-15 \
-    clang-format-11 clang-format-12 clang-format-13 clang-format-14 clang-format-15 \
+    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build mold ccache \
+    clang-tools-15 clang-tidy-15 clangd-15 clang-15 clang-format-15 \
     python3 python3-pip python3-venv ;\
     apt-get clean
 
-ENV PATH=${PATH}:/usr/lib/llvm-15/bin:/usr/lib/llvm-11/bin
+ENV PATH=${PATH}:/usr/lib/llvm-15/bin
 
 RUN wget -O /etc/zsh/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
-    wget -O  /etc/zsh/newuser.zshrc.recommended  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrc
+    wget -O  /etc/zsh/newuser.zshrc.recommended  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrc ;\
+    chsh -s /bin/zsh
 
 RUN apt-get update ;\
     apt-get install -y --install-recommends \
     g++-12 libstdc++-12-dev ;\
     apt-get clean
 
-ARG USER_NAME
-ARG USER_UID
-ARG USER_GID
-RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(getent group ${USER_GID} | cut -d: -f1)) \
-    && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/zsh -d /home/${USER_NAME} ${USER_NAME} ;\
-    echo "${USER_NAME} ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER_NAME}
-
-ENV HOSTALIASES /home/${USER_NAME}/hosts
-RUN cp /etc/hosts /home/${USER_NAME}/hosts || touch /home/${USER_NAME}/hosts ;\
-    chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
-RUN mkdir -p /run/host-services ;\
-    chown ${USER_NAME}:${USER_NAME} /run/host-services
-
-USER ${USER_NAME}
-ENV HOME=/home/${USER_NAME}
+ARG USER_HOME
+ENV HOME=${USER_HOME}
 WORKDIR ${HOME}
 
 ENV VIRTUAL_ENV=${HOME}/venv
@@ -52,6 +38,9 @@ RUN mkdir -p ${HOME}/.conan_profiles ;\
     pip --no-cache-dir install 'conan<2' ;\
     pip --no-cache-dir install 'gcovr'
 
+ENV CCACHE_DIR=${HOME}/.ccache
+RUN mkdir -p ${HOME}/.ccache
+
 ENV PROFILE=gcc-12
 RUN conan profile new ${PROFILE} --detect ;\
     ln -s ${HOME}/.conan_profiles/${PROFILE} ${HOME}/.conan_profiles/default ;\
@@ -65,6 +54,7 @@ RUN conan profile new ${PROFILE} --detect ;\
 ENV CC=/usr/bin/gcc-12
 ENV CXX=/usr/bin/g++-12
 ENV CONAN_DEFAULT_PROFILE_PATH=${HOME}/.conan/profiles/${PROFILE}
+ENV CMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/ccache
 ENV CMAKE_GENERATOR=Ninja
 ENV CMAKE_BUILD_TYPE=Debug
 ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
@@ -90,4 +80,5 @@ RUN echo "mkdir .build" > TODO.txt ;\
 
 RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     touch .zshrc.local ;\
-    ln -s .profile .zprofile
+    ln -s .profile .zprofile ;\
+    echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile

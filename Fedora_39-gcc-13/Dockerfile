@@ -5,28 +5,16 @@ WORKDIR /root
 
 RUN dnf -y update ;\
     dnf -y install redhat-lsb python3.11 gcc \
-    vim wget sudo curl git grep sed gdb zsh cmake ninja-build \
-    clang clang-tools-extra llvm mold gcc libstdc++-static ;\
+    vim wget curl git grep sed gdb zsh cmake ninja-build ccache mold \
+    clang clang-tools-extra libstdc++-static ;\
     dnf -y clean all
 
 RUN wget -O /etc/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
-    wget -O /etc/skel/.zshrc  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrc
+    wget -O /etc/skel/.zshrc  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrcv ;\
+    chsh -s /bin/zsh
 
-ARG USER_NAME
-ARG USER_UID
-ARG USER_GID
-RUN (groupadd --gid ${USER_GID} ${USER_NAME} || groupmod -n ${USER_NAME} $(getent group ${USER_GID} | cut -d: -f1)) \
-    && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/zsh -d /home/${USER_NAME} ${USER_NAME} ;\
-    echo "${USER_NAME} ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER_NAME}
-
-ENV HOSTALIASES /home/${USER_NAME}/hosts
-RUN cp /etc/hosts /home/${USER_NAME}/hosts || touch /home/${USER_NAME}/hosts ;\
-    chown ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/hosts
-RUN mkdir -p /run/host-services ;\
-    chown ${USER_NAME}:${USER_NAME} /run/host-services
-
-USER ${USER_NAME}
-ENV HOME=/home/${USER_NAME}
+ARG USER_HOME
+ENV HOME=${USER_HOME}
 WORKDIR ${HOME}
 
 ENV VIRTUAL_ENV=${HOME}/venv
@@ -44,6 +32,9 @@ RUN mkdir -p ${HOME}/.conan_profiles ;\
 # Fail build if unexpected gcc version
 RUN gcc --version | grep -E "^gcc \(GCC\) 13"
 
+ENV CCACHE_DIR=${HOME}/.ccache
+RUN mkdir -p ${HOME}/.ccache
+
 ENV PROFILE=gcc-13
 RUN conan profile new ${PROFILE} --detect ;\
     ln -s ${HOME}/.conan_profiles/${PROFILE} ${HOME}/.conan_profiles/default ;\
@@ -57,6 +48,7 @@ RUN conan profile new ${PROFILE} --detect ;\
 ENV CC=/usr/bin/gcc
 ENV CXX=/usr/bin/g++
 ENV CONAN_DEFAULT_PROFILE_PATH=${HOME}/.conan/profiles/${PROFILE}
+ENV CMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/ccache
 ENV CMAKE_GENERATOR=Ninja
 ENV CMAKE_BUILD_TYPE=Debug
 ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
@@ -79,4 +71,5 @@ RUN echo "mkdir .build" > TODO.txt ;\
     'echo $(readlink -f $(dirname $i)/include); '\
     'done' >> TODO.txt
 
-RUN touch .zshrc.local
+RUN touch .zshrc.local ;\
+    echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile

@@ -6,17 +6,15 @@
         //  By default, GID and UID are only visible to shell and not exported.
         //  You need to add `export GID; export UID` somewhere, e.g. ~/.profile
         "args": {
-            "USER_UID": "${localEnv:UID}",
-            "USER_GID": "${localEnv:GID}",
-            "USER_NAME": "${localEnv:USER}"
+            "USER_HOME": "${localEnv:HOME}"
         }
     },
-    "containerUser": "${localEnv:USER}",
     "containerEnv": {
         "DEVCONTAINER_ID": "${devcontainerId}",
         // Pass ssh-agent sock for git authentication
         "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh",
-        "WORK": "${localWorkspaceFolder}"
+        "WORK": "${localWorkspaceFolder}",
+        "HOME": "${localEnv:HOME}"
     },
     "init": true,
     "customizations": {
@@ -33,7 +31,11 @@
                 "GitHub.remotehub",
                 "GitHub.github-vscode-theme",
                 "ms-vscode.cmake-tools",
-                "github.vscode-github-actions"
+                "github.vscode-github-actions",
+                "bierner.markdown-preview-github-styles",
+                "donjayamanne.githistory",
+                "twxs.cmake",
+                "ms-vsliveshare.vsliveshare"
             ]
         }
     },
@@ -51,6 +53,12 @@
             "source": "${localEnv:SSH_AUTH_SOCK}",
             "target": "/run/user/${localEnv:UID}/ssh",
             "type": "bind"
+        },
+        {
+            //  This allows sharing of ccache data between containers
+            "source": "ccache_data",
+            "target": "/home/${localEnv:USER}/.ccache",
+            "type": "volume"
         },
         {
             //  This allows sharing of conan data between containers
