@@ -76,4 +76,5 @@ RUN echo "mkdir .build" > TODO.txt ;\
 
 RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     touch .zshrc.local ;\
-    ln -s .profile .zprofile
+    ln -s .profile .zprofile ;\
+    echo "alias rm-build='realpath . | grep \"^.*/\.build[^/]*$\" &>/dev/null && find -mindepth 1 -maxdepth 1 -type d | xargs rm -rf {} \; && find -mindepth 1 -maxdepth 1 -type f | xargs rm -f {} \;'" >> ~/.zprofile

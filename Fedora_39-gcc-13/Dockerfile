@@ -72,4 +72,5 @@ RUN echo "mkdir .build" > TODO.txt ;\
     'done' >> TODO.txt
 
 RUN touch .zshrc.local ;\
-    echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile
+    echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile ;\
+    echo "alias rm-build='realpath . | grep \"^.*/\.build[^/]*$\" &>/dev/null && find -mindepth 1 -maxdepth 1 -type d | xargs rm -rf {} \; && find -mindepth 1 -maxdepth 1 -type f | xargs rm -f {} \;'" >> ~/.zprofile

@@ -11,6 +11,23 @@ RUN apt-get update ;\
     python3 python3-pip python3-venv ;\
     apt-get clean
 
+RUN update-alternatives --install \
+    /usr/bin/clang clang /usr/bin/clang-15 100 \
+    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-15 ;\
+    update-alternatives --install \
+    /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-15 100 ;\
+    update-alternatives --install \
+    /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 100 ;\
+    update-alternatives --install \
+    /usr/bin/clang-format clang-format /usr/bin/clang-format-15 100 ;\
+    update-alternatives --install \
+    /usr/bin/clangd clangd /usr/bin/clangd-15 100 ;\
+    update-alternatives --auto clang ;\
+    update-alternatives --auto llvm-cov ;\
+    update-alternatives --auto clang-tidy ;\
+    update-alternatives --auto clang-format ;\
+    update-alternatives --auto clangd
+
 ENV PATH=${PATH}:/usr/lib/llvm-15/bin
 
 RUN wget -O /etc/zsh/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
@@ -76,4 +93,5 @@ RUN echo "mkdir .build" > TODO.txt ;\
 RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     touch .zshrc.local ;\
     ln -s .profile .zprofile ;\
-    echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile
+    echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile ;\
+    echo "alias rm-build='realpath . | grep \"^.*/\.build[^/]*$\" &>/dev/null && find -mindepth 1 -maxdepth 1 -type d | xargs rm -rf {} \; && find -mindepth 1 -maxdepth 1 -type f | xargs rm -f {} \;'" >> ~/.zprofile
