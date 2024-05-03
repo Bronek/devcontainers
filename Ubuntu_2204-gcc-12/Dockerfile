@@ -1,5 +1,32 @@
 ARG DIST_TAG=22.04
+FROM ubuntu:$DIST_TAG as build
+
+WORKDIR /root
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update ;\
+    apt-get install -y --install-recommends \
+    cmake ninja-build wget gcc g++ ;\
+    apt-get clean
+
+ARG MOLD_VERSION=2.31.0
+RUN wget -O v${MOLD_VERSION}.tar.gz https://github.com/rui314/mold/archive/refs/tags/v${MOLD_VERSION}.tar.gz ;\
+    tar -xzf v${MOLD_VERSION}.tar.gz ;\
+    mv mold-${MOLD_VERSION} mold && cd mold ;\
+    mkdir .build && cd .build ;\
+    cmake -DCMAKE_GENERATOR=Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. ;\
+    cmake --build . ;\
+    cmake --install . --prefix dist --strip
+
 FROM ubuntu:$DIST_TAG
+COPY --from=build /root/mold/.build/dist/bin/mold /usr/local/bin/mold
+COPY --from=build /root/mold/.build/dist/lib/mold/mold-wrapper.so /usr/local/lib/mold/mold-wrapper.so
+COPY --from=build /root/mold/.build/dist/share/doc/mold/LICENSE /usr/local/share/doc/mold/LICENSE
+COPY --from=build /root/mold/.build/dist/share/doc/mold/LICENSE.third-party /usr/local/share/doc/mold/LICENSE.third-party
+COPY --from=build /root/mold/.build/dist/share/man/man1/mold.1 /usr/local/share/man/man1/mold.1
+RUN cd /usr/local/bin/ && ln -s mold ld.mold
+RUN mkdir -p /usr/local/libexec/mold && cd /usr/local/libexec/mold/ && ln -s ../../bin/mold ld
+RUN cd /usr/local/share/man/man1/ && ln -s mold.1 ld.mold.1
 
 WORKDIR /root
 
@@ -46,8 +73,8 @@ RUN update-alternatives --install \
     --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-12 \
     --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-12 \
     --slave /usr/bin/gcov gcov /usr/bin/gcov-12 \
-    --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-dump-12 \
-    --slave /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-tool-12 ;\
+    --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-12 \
+    --slave /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-12 ;\
     update-alternatives --auto gcc
 
 ARG USER_HOME
@@ -86,9 +113,6 @@ ENV CMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/ccache
 ENV CMAKE_GENERATOR=Ninja
 ENV CMAKE_BUILD_TYPE=Debug
 ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
-ENV CMAKE_C_COMPILER=${CC}
-ENV CMAKE_CXX_COMPILER=${CXX}
-ENV CODE_COVERAGE_GCOV_TOOL=/usr/bin/gcov-12
 
 RUN echo "mkdir .build" > TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
@@ -110,4 +134,6 @@ RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     touch .zshrc.local ;\
     ln -s .profile .zprofile ;\
     echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile ;\
+    echo "alias to-gcc='export CC=/usr/bin/gcc-12; export CXX=/usr/bin/g++-12; env | grep --color=never -E \"^CC=|^CXX=\"'" >> ~/.zprofile ;\
+    echo "alias to-clang='export CC=/usr/bin/clang-15; export CXX=/usr/bin/clang++-15; env | grep --color=never -E \"^CC=|^CXX=\"'" >> ~/.zprofile ;\
     echo "alias rm-build='realpath . | grep \"^.*/\.build[^/]*$\" &>/dev/null && find -mindepth 1 -maxdepth 1 -type d | xargs rm -rf {} \; && find -mindepth 1 -maxdepth 1 -type f | xargs rm -f {} \;'" >> ~/.zprofile
