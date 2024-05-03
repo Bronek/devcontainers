@@ -33,7 +33,7 @@ WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update ;\
     apt-get install -y --install-recommends \
-    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build mold ccache \
+    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build ccache \
     clang-tools-15 clang-tidy-15 clangd-15 clang-15 clang-format-15 \
     python3 python3-pip python3-venv ;\
     apt-get clean
