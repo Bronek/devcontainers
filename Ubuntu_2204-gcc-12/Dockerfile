@@ -24,38 +24,52 @@ COPY --from=build /root/mold/.build/dist/lib/mold/mold-wrapper.so /usr/local/lib
 COPY --from=build /root/mold/.build/dist/share/doc/mold/LICENSE /usr/local/share/doc/mold/LICENSE
 COPY --from=build /root/mold/.build/dist/share/doc/mold/LICENSE.third-party /usr/local/share/doc/mold/LICENSE.third-party
 COPY --from=build /root/mold/.build/dist/share/man/man1/mold.1 /usr/local/share/man/man1/mold.1
-RUN cd /usr/local/bin/ && ln -s mold ld.mold
-RUN mkdir -p /usr/local/libexec/mold && cd /usr/local/libexec/mold/ && ln -s ../../bin/mold ld
-RUN cd /usr/local/share/man/man1/ && ln -s mold.1 ld.mold.1
+RUN cd /usr/local/bin/ && ln -s mold ld.mold ;\
+    mkdir -p /usr/local/libexec/mold && cd /usr/local/libexec/mold/ && ln -s ../../bin/mold ld ;\
+    cd /usr/local/share/man/man1/ && ln -s mold.1 ld.mold.1 ;\
+    echo '/usr/local/lib/mold' > /etc/ld.so.conf.d/000-local-lib.conf ;\
+    ldconfig -v
 
 WORKDIR /root
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update ;\
-    apt-get install -y --install-recommends \
-    lsb-release vim wget curl git grep sed gdb zsh cmake ninja-build ccache \
-    clang-tools-15 clang-tidy-15 clangd-15 clang-15 clang-format-15 \
-    python3 python3-pip python3-venv ;\
+ARG CLANG_RELEASE=18
+RUN set -ex ;\
+    CODENAME=$( . /etc/os-release && echo $VERSION_CODENAME ) ;\
+    apt-get update ;\
+    apt-get install -y --no-install-recommends ca-certificates wget gpg ;\
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/keyrings/llvm.gpg ;\
+    printf "%s\n%s\n" \
+      "deb [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-${CLANG_RELEASE} main" \
+      "deb-src [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-${CLANG_RELEASE} main" \
+      | tee /etc/apt/sources.list.d/llvm.list ;\
+    apt-get update ;\
+    apt-get install -y --no-install-recommends \
+      lsb-release less vim curl git grep sed gdb zsh lcov cmake ninja-build ccache \
+      python3 python3-pip python3-venv ;\
+    apt-get install -t llvm-toolchain-${CODENAME}-${CLANG_RELEASE} -y --no-install-recommends \
+      clang-${CLANG_RELEASE} clang-tools-${CLANG_RELEASE} clang-tidy-${CLANG_RELEASE} clang-format-${CLANG_RELEASE} \
+      clangd-${CLANG_RELEASE} libc++-${CLANG_RELEASE}-dev libc++abi-${CLANG_RELEASE}-dev llvm-${CLANG_RELEASE} ;\
     apt-get clean
 
 RUN update-alternatives --install \
-    /usr/bin/clang clang /usr/bin/clang-15 100 \
-    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-15 ;\
+    /usr/bin/clang clang /usr/bin/clang-${CLANG_RELEASE} 100 \
+    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_RELEASE} ;\
     update-alternatives --install \
-    /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-15 100 ;\
+    /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-${CLANG_RELEASE} 100 ;\
     update-alternatives --install \
-    /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 100 ;\
+    /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${CLANG_RELEASE} 100 ;\
     update-alternatives --install \
-    /usr/bin/clang-format clang-format /usr/bin/clang-format-15 100 ;\
+    /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_RELEASE} 100 ;\
     update-alternatives --install \
-    /usr/bin/clangd clangd /usr/bin/clangd-15 100 ;\
+    /usr/bin/clangd clangd /usr/bin/clangd-${CLANG_RELEASE} 100 ;\
     update-alternatives --auto clang ;\
     update-alternatives --auto llvm-cov ;\
     update-alternatives --auto clang-tidy ;\
     update-alternatives --auto clang-format ;\
     update-alternatives --auto clangd
 
-ENV PATH=${PATH}:/usr/lib/llvm-15/bin
+ENV PATH=${PATH}:/usr/lib/llvm-${CLANG_RELEASE}/bin
 
 RUN wget -O /etc/zsh/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
     wget -O  /etc/zsh/newuser.zshrc.recommended  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrc ;\
@@ -135,5 +149,5 @@ RUN cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
     ln -s .profile .zprofile ;\
     echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile ;\
     echo "alias to-gcc='export CC=/usr/bin/gcc-12; export CXX=/usr/bin/g++-12; env | grep --color=never -E \"^CC=|^CXX=\"'" >> ~/.zprofile ;\
-    echo "alias to-clang='export CC=/usr/bin/clang-15; export CXX=/usr/bin/clang++-15; env | grep --color=never -E \"^CC=|^CXX=\"'" >> ~/.zprofile ;\
+    echo "alias to-clang='export CC=/usr/bin/clang-${CLANG_RELEASE}; export CXX=/usr/bin/clang++-${CLANG_RELEASE}; env | grep --color=never -E \"^CC=|^CXX=\"'" >> ~/.zprofile ;\
     echo "alias rm-build='realpath . | grep \"^.*/\.build[^/]*$\" &>/dev/null && find -mindepth 1 -maxdepth 1 -type d | xargs rm -rf {} \; && find -mindepth 1 -maxdepth 1 -type f | xargs rm -f {} \;'" >> ~/.zprofile
