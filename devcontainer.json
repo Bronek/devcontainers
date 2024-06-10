@@ -6,9 +6,14 @@
         //  By default, GID and UID are only visible to shell and not exported.
         //  You need to add `export GID; export UID` somewhere, e.g. ~/.profile
         "args": {
-            "USER_HOME": "${localEnv:HOME}"
+            "HOME": "${localEnv:HOME}"
         }
     },
+    "initializeCommand": [
+        "/bin/mkdir",
+        "-p",
+        "/tmp/devcontainer-${localEnv:UID}/${devcontainerId}"
+    ],
     "containerEnv": {
         "DEVCONTAINER_ID": "${devcontainerId}",
         // Pass ssh-agent sock for git authentication
@@ -44,7 +49,7 @@
     "workspaceFolder": "${localWorkspaceFolder}",
     "mounts": [
         {
-            "source": "/tmp",
+            "source": "/tmp/devcontainer-${localEnv:UID}/${devcontainerId}",
             "target": "/tmp",
             "type": "bind"
         },

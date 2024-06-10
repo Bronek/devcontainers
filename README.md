@@ -1,6 +1,6 @@
 # devcontainers
 
-Several different [devcontainers](https://code.visualstudio.com/docs/devcontainers/containers) for vscode
+Single [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) for vscode
 
 #### Security note
 
@@ -27,10 +27,6 @@ _Let me know if you find it._
 - In the bottom left corner of vscode find icon that looks a little like `><`
 - Click on it, then find at the top of vscode a selection of options for Remote Window
 - Select "Reopen in Container" option
-- Select desired container type from the list
-  - clang-17 is not yet supported by conan
-  - fedora containers do not support clang-format-11
-  - building the container first time will take some time
 - Inside the container, do `cat ~/TODO.txt` and carry on from there
 
 
