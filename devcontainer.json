@@ -3,10 +3,10 @@
     "name": "${devcontainerId}",
     "build": {
         "dockerfile": "Dockerfile",
-        //  By default, GID and UID are only visible to shell and not exported.
-        //  You need to add `export GID; export UID` somewhere, e.g. ~/.profile
         "args": {
-            "HOME": "${localEnv:HOME}"
+            "HOME": "${localEnv:HOME}",
+            "CLANG_RELEASE": "17",
+            "GCC_RELEASE": "13"
         }
     },
     "initializeCommand": [
