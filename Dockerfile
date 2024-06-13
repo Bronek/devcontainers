@@ -152,7 +152,7 @@ RUN set -ex ;\
     grep -Fx "tools.cmake.cmaketoolchain:generator=Ninja" ${HOME}/.conan/global.conf &>/dev/null || echo tools.cmake.cmaketoolchain:generator=Ninja >> ${HOME}/.conan/global.conf
 
 RUN set -ex ;\
-    ln -s ${HOME}/.conan_profiles/${PROFILE_GCC} ${HOME}/.conan_profiles/default
+    ln -s ${PROFILE_GCC} ${HOME}/.conan_profiles/default
 
 ENV CC=/usr/bin/gcc
 ENV CXX=/usr/bin/g++
