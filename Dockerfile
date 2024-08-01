@@ -8,7 +8,7 @@ RUN set -ex ;\
     /usr/local/bin/gcc --version
 
 ARG CODENAME=bookworm
-FROM debian:$CODENAME as mold
+FROM debian:$CODENAME AS mold
 
 WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,7 +18,7 @@ RUN set -ex ;\
     cmake ninja-build wget gcc g++ ;\
     apt-get clean
 
-ARG MOLD_RELEASE=2.31.0
+ARG MOLD_RELEASE=2.32.1
 RUN set -ex ;\
     wget -O v${MOLD_RELEASE}.tar.gz https://github.com/rui314/mold/archive/refs/tags/v${MOLD_RELEASE}.tar.gz ;\
     tar -xzf v${MOLD_RELEASE}.tar.gz ;\
