@@ -80,7 +80,7 @@ RUN set -ex ;\
       | tee /etc/apt/sources.list.d/llvm.list ;\
     apt-get update ;\
     apt-get install -y --no-install-recommends \
-      less vim curl git grep sed gdb zsh lcov cmake make ninja-build ccache openssh-client \
+      less vim curl git grep sed gdb zsh lcov cmake make ninja-build ccache openssh-client jq \
       python3 python3-pip python3-venv ;\
     apt-get install -t llvm-toolchain-${CODENAME}-${CLANG_RELEASE} -y --no-install-recommends \
       clang-${CLANG_RELEASE} clang-tools-${CLANG_RELEASE} clang-tidy-${CLANG_RELEASE} clang-format-${CLANG_RELEASE} \
