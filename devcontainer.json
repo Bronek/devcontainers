@@ -54,21 +54,27 @@
             "type": "bind"
         },
         {
+            // Share rippled data with the host
+            "source": "${localEnv:HOME}/.rippled",
+            "target": "${localEnv:HOME}/.rippled",
+            "type": "bind"
+        },
+        {
             // Pass ssh-agent sock for git authentication
             "source": "${localEnv:SSH_AUTH_SOCK}",
             "target": "/run/user/${localEnv:UID}/ssh",
             "type": "bind"
         },
         {
-            //  This allows sharing of ccache data between containers
+            // This allows sharing of ccache data between containers
             "source": "ccache_data",
-            "target": "/home/${localEnv:USER}/.ccache",
+            "target": "${localEnv:HOME}/.ccache",
             "type": "volume"
         },
         {
-            //  This allows sharing of conan data between containers
+            // This allows sharing of conan data between containers
             "source": "conan_data",
-            "target": "/home/${localEnv:USER}/.conan",
+            "target": "${localEnv:HOME}/.conan",
             "type": "volume"
         }
     ],
