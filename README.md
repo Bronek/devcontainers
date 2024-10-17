@@ -4,17 +4,11 @@ Single [devcontainer](https://code.visualstudio.com/docs/devcontainers/container
 
 #### Security note
 
-**There is no security**. None, literally. The container impersonates you, its creator, to allow for
-seamless sharing of workspace files inside and outside of container. If someone runs your container,
-they might gain access to your SSH keys (assuming you are logged in) and will definitely gain access
-to your workspace files. It is specifically designed this way to allow for `git` and vscode extensions
-to work inside the container. You should only use this on a computer that is not shared with anyone.
+**There is no security**. None, literally. This container is best used in a `docker` configured
+to [rootless mode](https://docs.docker.com/engine/security/rootless/). Otherwise you will be exposing
+your secrets to anyone who might run this container on the same machine.
 
 **This pulls .zshrc from grml** into the container, because I like to use it. You might want to remove it.
-
-Perhaps there is a way to convince devcontainers extension to use `docker run --user` option, but I
-did not go this far reading documentation. This would remove the "impersonation" problem.
-_Let me know if you find it._
 
 
 #### Instructions:
