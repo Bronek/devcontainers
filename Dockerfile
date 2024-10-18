@@ -1,5 +1,14 @@
-ARG CODENAME=noble
-FROM ubuntu:$CODENAME AS mold
+ARG CODENAME=bookworm
+ARG GCC_RELEASE=13
+FROM gcc:${GCC_RELEASE}-${CODENAME} AS gcc
+RUN set -ex ;\
+    find /usr/local/ -type f ;\
+    cat /etc/ld.so.conf.d/*.conf ;\
+    cat /etc/os-release ;\
+    /usr/local/bin/gcc --version
+
+ARG CODENAME=bookworm
+FROM debian:$CODENAME AS mold
 
 WORKDIR /root
 ENV DEBIAN_FRONTEND=noninteractive
@@ -19,8 +28,30 @@ RUN set -ex ;\
     cmake --build . ;\
     cmake --install . --prefix dist --strip
 
-ARG CODENAME=noble
-FROM ubuntu:$CODENAME
+ARG CODENAME=bookworm
+FROM debian:$CODENAME
+COPY --from=gcc /usr/local/ /usr/local/
+COPY --from=gcc /etc/ld.so.conf.d/*.conf /etc/ld.so.conf.d/
+
+WORKDIR /root
+RUN set -ex ;\
+    ldconfig -v ;\
+    dpkg-divert --divert /usr/bin/gcc.orig --rename /usr/bin/gcc ;\
+    dpkg-divert --divert /usr/bin/g++.orig --rename /usr/bin/g++ ;\
+    dpkg-divert --divert /usr/bin/gfortran.orig --rename /usr/bin/gfortran ;\
+    update-alternatives --install /usr/bin/cc cc /usr/local/bin/gcc 999 ;\
+    update-alternatives --install \
+      /usr/bin/gcc gcc /usr/local/bin/gcc 100 \
+      --slave /usr/bin/g++ g++ /usr/local/bin/g++ \
+      --slave /usr/bin/gcc-ar gcc-ar /usr/local/bin/gcc-ar \
+      --slave /usr/bin/gcc-nm gcc-nm /usr/local/bin/gcc-nm \
+      --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/local/bin/gcc-ranlib \
+      --slave /usr/bin/gcov gcov /usr/local/bin/gcov \
+      --slave /usr/bin/gcov-tool gcov-tool /usr/local/bin/gcov-tool \
+      --slave /usr/bin/gcov-dump gcov-dump /usr/local/bin/gcov-dump \
+      --slave /usr/bin/lto-dump lto-dump /usr/local/bin/lto-dump ;\
+    update-alternatives --auto cc ;\
+    update-alternatives --auto gcc
 
 COPY --from=mold /root/mold/.build/dist/bin/mold /usr/local/bin/mold
 COPY --from=mold /root/mold/.build/dist/lib/mold/mold-wrapper.so /usr/local/lib/mold/mold-wrapper.so
@@ -39,32 +70,25 @@ ARG CLANG_RELEASE=18
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /root
 RUN set -ex ;\
+    CODENAME=$( . /etc/os-release && echo $VERSION_CODENAME ) ;\
+    apt-get update ;\
     apt-get update ;\
     apt-get install -y --no-install-recommends \
       ca-certificates gpg gpg-agent curl wget less vim xxd git grep sed gdb patch \
-      build-essential zsh lcov cmake make ninja-build ccache openssh-client jq \
-      g++-${GCC_RELEASE} libstdc++-${GCC_RELEASE}-dev libc6-dev \
-      python3 python3-pip python3-venv python3-dev \
+      build-essential zsh lcov cmake ninja-build ccache openssh-client jq libc6-dev \
+      python3 python3-pip python3-venv python3-dev ;\
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/keyrings/llvm.gpg ;\
+    printf "%s\n%s\n" \
+      "deb [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-${CLANG_RELEASE} main" \
+      "deb-src [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-${CLANG_RELEASE} main" \
+      | tee /etc/apt/sources.list.d/llvm.list ;\
+    apt-get update ;\
+    apt-get install -t llvm-toolchain-${CODENAME}-${CLANG_RELEASE} -y --no-install-recommends \
       clang-${CLANG_RELEASE} clang-tools-${CLANG_RELEASE} \
       clang-tidy-${CLANG_RELEASE} clang-format-${CLANG_RELEASE} \
       clangd-${CLANG_RELEASE} libc++-${CLANG_RELEASE}-dev \
       libc++abi-${CLANG_RELEASE}-dev llvm-${CLANG_RELEASE}-dev ;\
     apt-get clean
-
-RUN set -ex ;\
-    update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${GCC_RELEASE} 999 ;\
-    update-alternatives --install \
-      /usr/bin/gcc gcc /usr/bin/gcc-${GCC_RELEASE} 100 \
-      --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_RELEASE} \
-      --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-${GCC_RELEASE} \
-      --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-${GCC_RELEASE} \
-      --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-${GCC_RELEASE} \
-      --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_RELEASE} \
-      --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-${GCC_RELEASE} \
-      --slave /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-${GCC_RELEASE} \
-      --slave /usr/bin/lto-dump lto-dump /usr/bin/lto-dump-${GCC_RELEASE} ;\
-    update-alternatives --auto cc ;\
-    update-alternatives --auto gcc
 
 RUN set -ex ;\
     update-alternatives --install \
