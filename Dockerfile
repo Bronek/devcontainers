@@ -183,6 +183,7 @@ RUN set -ex ;\
 
 RUN set -ex ;\
     cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
+    printf "python\nimport sys\nsys.path.insert(0, '/usr/share/gcc/python')\nfrom libstdcxx.v6.printers import register_libstdcxx_printers\nregister_libstdcxx_printers(None)\nend\n" >> ~/.gdbinit ;\
     touch .zshrc.local ;\
     ln -s .profile .zprofile ;\
     echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile ;\
