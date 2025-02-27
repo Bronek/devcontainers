@@ -42,7 +42,8 @@
                 "donjayamanne.githistory",
                 "ms-vscode.cmake-tools",
                 "eamodio.gitlens",
-                "ms-vsliveshare.vsliveshare"
+                "ms-vsliveshare.vsliveshare",
+                "amodio.restore-editors"
             ]
         }
     },
