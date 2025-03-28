@@ -1,0 +1,29 @@
+FROM debian:bookworm AS build
+
+ARG CLANG_RELEASE=16
+ENV CLANG_RELEASE=${CLANG_RELEASE}
+WORKDIR /root
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -ex ;\
+  apt-get update ;\
+  apt-get install --yes \
+  clang-${CLANG_RELEASE} clang++-${CLANG_RELEASE} python3-pip python-is-python3 cmake git ninja-build wget ;\
+  apt-get clean ;\
+  pip install --no-cache --break-system-packages "conan<2"
+
+RUN set -ex ;\
+  conan config set general.revisions_enabled=1 ;\
+  conan profile new --detect default ;\
+  conan profile update settings.compiler=clang default ;\
+  conan profile update settings.compiler.version=${CLANG_RELEASE} default ;\
+  conan profile update settings.compiler.libcxx=libstdc++11 default ;\
+  conan profile update settings.compiler.cppstd=20 default ;\
+  conan profile update options.rocksdb=False default ;\
+  conan profile update 'env.CXXFLAGS="-DBOOST_ASIO_DISABLE_CONCEPTS"' default ;\
+  conan profile update 'conf.tools.build:cxxflags+=["-DBOOST_ASIO_DISABLE_CONCEPTS"]' default
+
+ENV CC=/usr/bin/clang-${CLANG_RELEASE}
+ENV CXX=/usr/bin/clang++-${CLANG_RELEASE}
+ENV CMAKE_GENERATOR=Ninja
+ENV CMAKE_BUILD_TYPE=Debug
+ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
