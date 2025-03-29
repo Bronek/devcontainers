@@ -4,7 +4,6 @@
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
-            "HOME": "${localEnv:HOME}",
             "CLANG_RELEASE": "17",
             "GCC_RELEASE": "13"
         }
@@ -18,8 +17,7 @@
         "DEVCONTAINER_ID": "${devcontainerId}",
         // Pass ssh-agent sock for git authentication
         "SSH_AUTH_SOCK": "/run/user/${localEnv:UID}/ssh",
-        "WORK": "${localWorkspaceFolder}",
-        "HOME": "${localEnv:HOME}"
+        "WORK": "${localWorkspaceFolder}"
     },
     "init": true,
     "customizations": {
@@ -71,13 +69,13 @@
         {
             // This allows sharing of ccache data between containers
             "source": "ccache_data",
-            "target": "${localEnv:HOME}/.ccache",
+            "target": "/root/.ccache",
             "type": "volume"
         },
         {
             // This allows sharing of conan data between containers
             "source": "conan_data",
-            "target": "${localEnv:HOME}/.conan",
+            "target": "/root/.conan",
             "type": "volume"
         }
     ],

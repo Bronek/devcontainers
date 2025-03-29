@@ -67,8 +67,10 @@ RUN set -ex ;\
 
 ARG GCC_RELEASE=13
 ARG CLANG_RELEASE=18
+
 ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /root
+ENV HOME=/root
+WORKDIR ${HOME}
 RUN set -ex ;\
     CODENAME=$( . /etc/os-release && echo $VERSION_CODENAME ) ;\
     apt-get update ;\
@@ -114,9 +116,6 @@ RUN set -ex ;\
     wget -O /etc/zsh/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
     wget -O  /etc/zsh/newuser.zshrc.recommended  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrc ;\
     chsh -s /bin/zsh
-
-ARG HOME
-WORKDIR ${HOME}
 
 ENV VIRTUAL_ENV=${HOME}/venv
 RUN set -ex ;\
@@ -170,14 +169,13 @@ RUN set -ex ;\
     echo "cd .build" >> TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Debug" >> TODO.txt ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
-    echo "cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
+    echo "cmake -Dwerr=ON -Dxrpld=ON -Dtests=ON -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
     echo "cmake --build ." >> TODO.txt ;\
     echo 'for i in $(ls ~/.conan/data/*/*/_/_/package/*/conaninfo.txt); '\
     'do head -20 $i | '\
     'grep -A10 -B10 build_type=Release | '\
     'grep -A10 -B10 os=Linux | '\
     'grep -A10 -B10 -E "compiler=gcc" | '\
-    'grep -E "compiler.version=12|compiler.version=5" >/dev/null && '\
     'echo $(readlink -f $(dirname $i)/include); '\
     'done' >> TODO.txt
 
