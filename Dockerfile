@@ -171,13 +171,7 @@ RUN set -ex ;\
     echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
     echo "cmake -Dwerr=ON -Dxrpld=ON -Dtests=ON -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
     echo "cmake --build ." >> TODO.txt ;\
-    echo 'for i in $(ls ~/.conan/data/*/*/_/_/package/*/conaninfo.txt); '\
-    'do head -20 $i | '\
-    'grep -A10 -B10 build_type=Release | '\
-    'grep -A10 -B10 os=Linux | '\
-    'grep -A10 -B10 -E "compiler=gcc" | '\
-    'echo $(readlink -f $(dirname $i)/include); '\
-    'done' >> TODO.txt
+    echo "grep -A1 -E '^\[includedirs_' conanbuildinfo.txt | grep -Ev '^--|^\['" >> TODO.txt
 
 RUN set -ex ;\
     cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
