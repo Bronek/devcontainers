@@ -2,10 +2,10 @@
     //  devcontainer.json is mapped to JSONC - hooray for comments !
     "name": "${devcontainerId}",
     "build": {
-        "dockerfile": "Dockerfile",
+        "dockerfile": "Dockerfile.gcc",
         "args": {
-            "CLANG_RELEASE": "17",
-            "GCC_RELEASE": "13"
+            "CLANG_RELEASE": "18",
+            "GCC_RELEASE": "11"
         }
     },
     "initializeCommand": [

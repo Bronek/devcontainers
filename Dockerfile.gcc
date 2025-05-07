@@ -5,23 +5,106 @@ ENV GCC_RELEASE=${GCC_RELEASE}
 WORKDIR /root
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV HOME=/root
+WORKDIR ${HOME}
 RUN set -ex ;\
   apt-get update ;\
   apt-get install --yes \
-  gcc-${GCC_RELEASE} g++-${GCC_RELEASE} python3-pip python-is-python3 cmake git ninja-build wget ;\
-  apt-get clean ;\
-  pip install --no-cache --break-system-packages "conan<2"
+  gcc-${GCC_RELEASE} g++-${GCC_RELEASE} python3-pip python-is-python3 python3-venv python3-dev \
+  wget ca-certificates gpg gpg-agent curl less vim xxd git grep sed gdb patch build-essential \
+  zsh cmake ninja-build ccache openssh-client jq libc6-dev ;\
+  apt-get clean
 
 RUN set -ex ;\
-  conan config set general.revisions_enabled=1 ;\
-  conan profile new --detect default ;\
-  conan profile update settings.compiler=gcc default ;\
-  conan profile update settings.compiler.version=${GCC_RELEASE} default ;\
-  conan profile update settings.compiler.libcxx=libstdc++11 default ;\
-  conan profile update settings.compiler.cppstd=20 default ;\
-  conan profile update options.rocksdb=False default
+  update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${GCC_RELEASE} 999 ;\
+  update-alternatives --install \
+  /usr/bin/gcc gcc /usr/bin/gcc-${GCC_RELEASE} 100 \
+  --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_RELEASE} \
+  --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-${GCC_RELEASE} \
+  --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-${GCC_RELEASE} \
+  --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-${GCC_RELEASE} \
+  --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_RELEASE} \
+  --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-${GCC_RELEASE} \
+  --slave /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-${GCC_RELEASE} \
+  --slave /usr/bin/lto-dump lto-dump /usr/bin/lto-dump-${GCC_RELEASE} ;\
+  update-alternatives --auto cc ;\
+  update-alternatives --auto gcc
+
+# For clangd, clang-format and clang-tidy
+ARG CLANG_RELEASE=18
+ENV CLANG_RELEASE=${CLANG_RELEASE}
+RUN set -ex ;\
+  CODENAME=$( . /etc/os-release && echo $VERSION_CODENAME ) ;\
+  wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/keyrings/llvm.gpg ;\
+  printf "%s\n%s\n" \
+  "deb [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-${CLANG_RELEASE} main" \
+  "deb-src [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-${CLANG_RELEASE} main" \
+  | tee /etc/apt/sources.list.d/llvm.list ;\
+  apt-get update ;\
+  apt-get install -t llvm-toolchain-${CODENAME}-${CLANG_RELEASE} -y --no-install-recommends \
+  clang++-${CLANG_RELEASE} clang-${CLANG_RELEASE} clang-tools-${CLANG_RELEASE} \
+  clang-tidy-${CLANG_RELEASE} clang-format-${CLANG_RELEASE} \
+  clangd-${CLANG_RELEASE} llvm-${CLANG_RELEASE}-dev ;\
+  apt-get clean
+
+ENV PATH=${PATH}:/usr/lib/llvm-${CLANG_RELEASE}/bin
+
+RUN set -ex ;\
+  wget -O /etc/zsh/zshrc https://git.grml.org/f/grml-etc-core/etc/zsh/zshrc ;\
+  wget -O  /etc/zsh/newuser.zshrc.recommended  https://git.grml.org/f/grml-etc-core/etc/skel/.zshrc ;\
+  chsh -s /bin/zsh
+
+ENV VIRTUAL_ENV=${HOME}/venv
+RUN set -ex ;\
+  python3 -m venv ${VIRTUAL_ENV}
+ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
+ENV EDITOR=vim
+ENV VISUAL=vim
+
+ENV CCACHE_DIR=${HOME}/.ccache
+RUN set -ex ;\
+  mkdir -p ${HOME}/.conan_profiles ;\
+  mkdir -p ${HOME}/.conan ;\
+  ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
+  pip --no-cache-dir install 'conan<2' ;\
+  pip --no-cache-dir install 'gcovr' ;\
+  mkdir -p ${HOME}/.ccache
+
+ENV PROFILE_GCC=gcc-${GCC_RELEASE}
+RUN set -ex ;\
+  conan profile new ${PROFILE_GCC} --detect ;\
+  conan profile update settings.compiler=gcc ${PROFILE_GCC} ;\
+  conan profile update settings.compiler.version=${GCC_RELEASE} ${PROFILE_GCC} ;\
+  conan profile update settings.compiler.cppstd=20 ${PROFILE_GCC} ;\
+  conan profile update settings.compiler.libcxx=libstdc++11 ${PROFILE_GCC} ;\
+  conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/gcc", "cpp": "/usr/bin/g++"}' ${PROFILE_GCC} ;\
+  grep -Fx "tools.cmake.cmaketoolchain:generator=Ninja" ${HOME}/.conan/global.conf &>/dev/null || echo tools.cmake.cmaketoolchain:generator=Ninja >> ${HOME}/.conan/global.conf
+
+RUN set -ex ;\
+  ln -s ${PROFILE_GCC} ${HOME}/.conan_profiles/default
 
 ENV CC=/usr/bin/gcc-${GCC_RELEASE}
 ENV CXX=/usr/bin/g++-${GCC_RELEASE}
+ENV CMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/ccache
 ENV CMAKE_GENERATOR=Ninja
 ENV CMAKE_BUILD_TYPE=Debug
+ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
+
+RUN set -ex ;\
+  echo "mkdir .build" > TODO.txt ;\
+  echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
+  echo "cd .build" >> TODO.txt ;\
+  echo "conan install .. --output-folder . --build missing --settings build_type=Debug" >> TODO.txt ;\
+  echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
+  echo "cmake -Dwerr=ON -Dxrpld=ON -Dtests=ON -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
+  echo "cmake --build ." >> TODO.txt ;\
+  echo "grep -A1 -E '^\[includedirs_' conanbuildinfo.txt | grep -Ev '^--|^\['" >> TODO.txt
+
+RUN set -ex ;\
+  cp /etc/zsh/newuser.zshrc.recommended .zshrc ;\
+  printf "python\nimport sys\nsys.path.insert(0, '/usr/share/gcc/python')\nfrom libstdcxx.v6.printers import register_libstdcxx_printers\nregister_libstdcxx_printers(None)\nend\n" >> ~/.gdbinit ;\
+  touch .zshrc.local ;\
+  ln -s .profile .zprofile ;\
+  echo 'export CCACHE_BASEDIR=$WORK' >> ~/.zprofile ;\
+  echo "alias to-gcc='export CC=/usr/bin/gcc-${GCC_RELEASE}; export CXX=/usr/bin/g++-${GCC_RELEASE}; env | grep --color=never -E \"^CC=|^CXX=\"'" >> ~/.zprofile ;\
+  echo "alias rm-build='realpath . | grep \"^.*/\.build[^/]*$\" &>/dev/null && find -mindepth 1 -maxdepth 1 -type d | xargs rm -rf {} \; && find -mindepth 1 -maxdepth 1 -type f | xargs rm -f {} \;'" >> ~/.zprofile
