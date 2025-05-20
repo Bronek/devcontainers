@@ -131,6 +131,7 @@ RUN set -ex ;\
     ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
     pip --no-cache-dir install 'conan<2' ;\
     pip --no-cache-dir install 'gcovr' ;\
+    pip --no-cache-dir install 'clang-format==18.1.8' ;\
     mkdir -p ${HOME}/.ccache
 
 ENV PROFILE_GCC=gcc-${GCC_RELEASE}
