@@ -4,7 +4,7 @@
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
-            "CLANG_RELEASE": "18",
+            "CLANG_RELEASE": "20",
             "GCC_RELEASE": "14"
         }
     },
@@ -41,7 +41,7 @@
                 "ms-vscode.cmake-tools",
                 "eamodio.gitlens",
                 "ms-vsliveshare.vsliveshare",
-                "amodio.restore-editors"
+                "JetBrains.jetbrains-ai-assistant"
             ]
         }
     },
@@ -74,8 +74,8 @@
         },
         {
             // This allows sharing of conan data between containers
-            "source": "conan_data",
-            "target": "/root/.conan",
+            "source": "conan2_data",
+            "target": "/root/.conan2",
             "type": "volume"
         }
     ],

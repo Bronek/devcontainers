@@ -18,7 +18,7 @@ RUN set -ex ;\
     cmake ninja-build wget gcc g++ ;\
     apt-get clean
 
-ARG MOLD_RELEASE=2.34.1
+ARG MOLD_RELEASE=2.40.1
 RUN set -ex ;\
     wget -O v${MOLD_RELEASE}.tar.gz https://github.com/rui314/mold/archive/refs/tags/v${MOLD_RELEASE}.tar.gz ;\
     tar -xzf v${MOLD_RELEASE}.tar.gz ;\
@@ -56,7 +56,6 @@ RUN set -ex ;\
 COPY --from=mold /root/mold/.build/dist/bin/mold /usr/local/bin/mold
 COPY --from=mold /root/mold/.build/dist/lib/mold/mold-wrapper.so /usr/local/lib/mold/mold-wrapper.so
 COPY --from=mold /root/mold/.build/dist/share/doc/mold/LICENSE /usr/local/share/doc/mold/LICENSE
-COPY --from=mold /root/mold/.build/dist/share/doc/mold/LICENSE.third-party /usr/local/share/doc/mold/LICENSE.third-party
 COPY --from=mold /root/mold/.build/dist/share/man/man1/mold.1 /usr/local/share/man/man1/mold.1
 RUN set -ex ;\
     cd /usr/local/bin/ && ln -s mold ld.mold ;\
@@ -127,32 +126,32 @@ ENV VISUAL=vim
 ENV CCACHE_DIR=${HOME}/.ccache
 RUN set -ex ;\
     mkdir -p ${HOME}/.conan_profiles ;\
-    mkdir -p ${HOME}/.conan ;\
-    ln -s ${HOME}/.conan_profiles ${HOME}/.conan/profiles ;\
-    pip --no-cache-dir install 'conan<2' ;\
+    mkdir -p ${HOME}/.conan2 ;\
+    ln -s ${HOME}/.conan_profiles ${HOME}/.conan2/profiles ;\
+    pip --no-cache-dir install 'conan' ;\
     pip --no-cache-dir install 'gcovr' ;\
     pip --no-cache-dir install 'clang-format==18.1.8' ;\
     mkdir -p ${HOME}/.ccache
 
 ENV PROFILE_GCC=gcc-${GCC_RELEASE}
 RUN set -ex ;\
-    conan profile new ${PROFILE_GCC} --detect ;\
-    conan profile update settings.compiler=gcc ${PROFILE_GCC} ;\
-    conan profile update settings.compiler.version=${GCC_RELEASE} ${PROFILE_GCC} ;\
-    conan profile update settings.compiler.cppstd=20 ${PROFILE_GCC} ;\
-    conan profile update settings.compiler.libcxx=libstdc++11 ${PROFILE_GCC} ;\
-    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/gcc", "cpp": "/usr/bin/g++"}' ${PROFILE_GCC} ;\
-    grep -Fx "tools.cmake.cmaketoolchain:generator=Ninja" ${HOME}/.conan/global.conf &>/dev/null || echo tools.cmake.cmaketoolchain:generator=Ninja >> ${HOME}/.conan/global.conf
+    export CC=/usr/bin/gcc ;\
+    export CXX=/usr/bin/g++ ;\
+    conan profile detect ;\
+    sed -i -e 's|^compiler\.cppstd=.*$|compiler.cppstd=20|' ~/.conan2/profiles/default ;\
+    echo "[conf]" >>  ~/.conan2/profiles/default ;\
+    echo "tools.build:compiler_executables={'c': '${CC}', 'cpp': '${CXX}'}" >>  ~/.conan2/profiles/default ;\
+    mv ~/.conan2/profiles/default ~/.conan2/profiles/${PROFILE_GCC}
 
 ENV PROFILE_CLANG=clang-${CLANG_RELEASE}
 RUN set -ex ;\
-    conan profile new ${PROFILE_CLANG} --detect ;\
-    conan profile update settings.compiler=clang ${PROFILE_CLANG} ;\
-    conan profile update settings.compiler.version=${CLANG_RELEASE} ${PROFILE_CLANG} ;\
-    conan profile update settings.compiler.cppstd=20 ${PROFILE_CLANG} ;\
-    conan profile update settings.compiler.libcxx=libstdc++11 ${PROFILE_CLANG} ;\
-    conan profile update 'conf.tools.build:compiler_executables={"c": "/usr/bin/clang", "cpp": "/usr/bin/clang++"}' ${PROFILE_CLANG} ;\
-    grep -Fx "tools.cmake.cmaketoolchain:generator=Ninja" ${HOME}/.conan/global.conf &>/dev/null || echo tools.cmake.cmaketoolchain:generator=Ninja >> ${HOME}/.conan/global.conf
+    export CC=/usr/bin/clang ;\
+    export CXX=/usr/bin/clang++ ;\
+    conan profile detect ;\
+    sed -i -e 's|^compiler\.cppstd=.*$|compiler.cppstd=20|' ~/.conan2/profiles/default ;\
+    echo "[conf]" >>  ~/.conan2/profiles/default ;\
+    echo "tools.build:compiler_executables={'c': '${CC}', 'cpp': '${CXX}'}" >>  ~/.conan2/profiles/default ;\
+    mv ~/.conan2/profiles/default ~/.conan2/profiles/${PROFILE_CLANG}
 
 RUN set -ex ;\
     ln -s ${PROFILE_GCC} ${HOME}/.conan_profiles/default
