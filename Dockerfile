@@ -92,8 +92,9 @@ RUN set -ex ;\
     apt-get clean
 
 RUN set -ex ;\
+    update-alternatives --install /usr/bin/cc cc /usr/bin/clang++-${CLANG_RELEASE} 999 ;\
     update-alternatives --install \
-    /usr/bin/clang clang /usr/bin/clang-${CLANG_RELEASE} 100 \
+      /usr/bin/clang clang /usr/bin/clang-${CLANG_RELEASE} 100 \
       --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_RELEASE} ;\
     update-alternatives --install \
       /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-${CLANG_RELEASE} 100 ;\
@@ -103,6 +104,7 @@ RUN set -ex ;\
       /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_RELEASE} 100 ;\
     update-alternatives --install \
       /usr/bin/clangd clangd /usr/bin/clangd-${CLANG_RELEASE} 100 ;\
+    update-alternatives --auto cc ;\
     update-alternatives --auto clang ;\
     update-alternatives --auto llvm-cov ;\
     update-alternatives --auto clang-tidy ;\
@@ -164,12 +166,15 @@ ENV CMAKE_BUILD_TYPE=Debug
 ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
 
 RUN set -ex ;\
-    echo "mkdir .build" > TODO.txt ;\
+    echo "conan export --version 1.1.10 external/snappy" >> TODO.txt ;\
+    echo "conan export --version 4.0.3 external/soci" >> TODO.txt ;\
+    echo "conan export --version 6.30.1 external/protobuf" >> TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
+    echo "mkdir .build" >> TODO.txt ;\
     echo "cd .build" >> TODO.txt ;\
-    echo "conan install .. --output-folder . --build missing --settings build_type=Debug" >> TODO.txt ;\
-    echo "conan install .. --output-folder . --build missing --settings build_type=Release" >> TODO.txt ;\
-    echo "cmake -Dwerr=ON -Dxrpld=ON -Dtests=ON -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
+    echo "export CMAKE_BUILD_TYPE=Debug" ;\
+    echo 'conan install .. --output-folder . --build missing --settings build_type=$CMAKE_BUILD_TYPE' >> TODO.txt ;\
+    echo "cmake -Dwextra=ON -Dwerr=ON -Dxrpld=ON -Dtests=ON -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
     echo "cmake --build ." >> TODO.txt ;\
     echo "grep -A1 -E '^\[includedirs_' conanbuildinfo.txt | grep -Ev '^--|^\['" >> TODO.txt
 
