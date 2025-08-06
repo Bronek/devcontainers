@@ -4,7 +4,7 @@
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
-            "CLANG_RELEASE": "16",
+            "CLANG_RELEASE": "19",
             "GCC_RELEASE": "14"
         }
     },

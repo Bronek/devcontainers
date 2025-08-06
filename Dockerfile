@@ -168,7 +168,6 @@ ENV CMAKE_EXPORT_COMPILE_COMMANDS=1
 RUN set -ex ;\
     echo "conan export --version 1.1.10 external/snappy" >> TODO.txt ;\
     echo "conan export --version 4.0.3 external/soci" >> TODO.txt ;\
-    echo "conan export --version 6.30.1 external/protobuf" >> TODO.txt ;\
     echo "ln -s .build/compile_commands.json compile_commands.json" >> TODO.txt ;\
     echo "mkdir .build" >> TODO.txt ;\
     echo "cd .build" >> TODO.txt ;\
@@ -176,7 +175,7 @@ RUN set -ex ;\
     echo 'conan install .. --output-folder . --build missing --settings build_type=$CMAKE_BUILD_TYPE' >> TODO.txt ;\
     echo "cmake -Dwextra=ON -Dwerr=ON -Dxrpld=ON -Dtests=ON -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake .." >> TODO.txt ;\
     echo "cmake --build ." >> TODO.txt ;\
-    echo 'cd ~/.conan2/p/b; for i in $(ls -d */*); do ls -d $i/include 1>/dev/null 2>&1 && (grep -A10 -B10 -E '^build_type=Release$' $i/conaninfo.txt | grep -E '^compiler\.cppstd=20$') 1>/dev/null 2>&1 && printf "-isystem%s/include, " "$(realpath $i)"; done' >> TODO.txt ;\
+    echo 'cd ~/.conan2/p/b; for i in $(ls -d */*); do ls -d $i/include 1>/dev/null 2>&1 && (grep -A10 -B10 -E '^build_type=Release$' $i/conaninfo.txt | grep -A10 -B10 -E '^compiler=gcc$' | grep -E '^os=Linux$' ) 1>/dev/null 2>&1 && printf "-isystem%s/include, " "$(realpath $i)"; done' >> TODO.txt ;\
     echo 'cd ~/.conan2/p; for i in $(ls -d */*); do ls -d $i/include 1>/dev/null 2>&1 && ls -l $i/conaninfo.txt 1>/dev/null 2>&1 && printf "-isystem%s/include, " "$(realpath $i)"; done' >> TODO.txt
 
 RUN set -ex ;\
