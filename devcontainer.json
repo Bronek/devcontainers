@@ -40,8 +40,7 @@
                 "donjayamanne.githistory",
                 "ms-vscode.cmake-tools",
                 "eamodio.gitlens",
-                "ms-vsliveshare.vsliveshare",
-                "JetBrains.jetbrains-ai-assistant"
+                "ms-vsliveshare.vsliveshare"
             ]
         }
     },
