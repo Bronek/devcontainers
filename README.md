@@ -12,8 +12,6 @@ your secrets to anyone who might run this container on the same machine.
 
 
 #### Instructions:
-- Add `export GID; export UID` to your `~/.profile`; these are used by vscode to impersonate you when building your container
-  - you know what to do after a change to `~/.profile`
 - Make your own fork of this repo, so you can modify it to your heart's content
 - Add "Dev Containers" extension from Microsoft to your vscode
 - Clone the whole repo inside `.devcontainer` (note singular, no "s") folder in your project
